@@ -53,22 +53,48 @@ function App() {
   const handleDownload = () => {
     if (fileContents.length > 0) {
       fileContents.forEach((content, index) => {
-        const downloadLink = document.createElement("a");
-        downloadLink.href = content;
         const label = labels[index];
         const newFilename = insertLabelBeforeExtension(asin, label);
+
+        // Create a blob object from the data URL
+        const blob = dataURLtoBlob(content);
+
+        // Create a URL for the blob object
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Create a temporary anchor element to trigger download
+        const downloadLink = document.createElement("a");
+        downloadLink.href = blobUrl;
         downloadLink.download = newFilename;
+
+        // Trigger the download
         document.body.appendChild(downloadLink);
         downloadLink.click();
+
+        // Cleanup
         document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(blobUrl);
       });
     }
   };
 
+  // Function to convert data URL to Blob
+  function dataURLtoBlob(dataURL) {
+    const parts = dataURL.split(";base64,");
+    const contentType = parts[0].split(":")[1];
+    const raw = window.atob(parts[1]);
+    const rawLength = raw.length;
+    const uInt8Array = new Uint8Array(rawLength);
+    for (let i = 0; i < rawLength; ++i) {
+      uInt8Array[i] = raw.charCodeAt(i);
+    }
+    return new Blob([uInt8Array], { type: contentType });
+  }
+
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Amazon Image Processor</h1>
+        <h1>File Picker App</h1>
         <label htmlFor="files">Choose JPEG pictures:</label>
         <input
           id="files"
@@ -104,11 +130,6 @@ function App() {
                   <option value="FRNT">FRNT</option>
                   <option value="BACK">BACK</option>
                   <option value="PT01">PT01</option>
-                  <option value="PT02">PT02</option>
-                  <option value="PT03">PT03</option>
-                  <option value="PT04">PT04</option>
-                  <option value="PT05">PT05</option>
-                  <option value="PT06">PT06</option>
                 </select>
               </div>
             ))}
