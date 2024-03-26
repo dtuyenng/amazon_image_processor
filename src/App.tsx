@@ -1,22 +1,22 @@
-import React, { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import "./App.css";
 
-function App() {
-  const [files, setFiles] = useState([]);
-  const [labels, setLabels] = useState([]);
-  const [fileContents, setFileContents] = useState([]);
-  const [asin, setAsin] = useState("");
+function App(): JSX.Element {
+  const [files, setFiles] = useState<File[]>([]);
+  const [labels, setLabels] = useState<string[]>([]);
+  const [fileContents, setFileContents] = useState<string[]>([]);
+  const [asin, setAsin] = useState<string>("");
 
-  const handleFileChange = (event) => {
-    const selectedFiles = Array.from(event.target.files).filter(
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const selectedFiles = Array.from(event.target.files || []).filter(
       (file) => file.type === "image/jpeg"
     );
     setFiles(selectedFiles);
     setLabels(selectedFiles.map(() => "MAIN")); // Default label is MAIN
     const promises = selectedFiles.map((file) => {
-      return new Promise((resolve, reject) => {
+      return new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
+        reader.onload = (e) => resolve(e.target?.result as string);
         reader.onerror = (e) => reject(e);
         reader.readAsDataURL(file);
       });
@@ -26,7 +26,10 @@ function App() {
       .catch((error) => console.error("Error reading files:", error));
   };
 
-  const insertLabelBeforeExtension = (filename, label) => {
+  const insertLabelBeforeExtension = (
+    filename: string,
+    label: string
+  ): string => {
     const lastDotIndex = filename.lastIndexOf(".");
     if (lastDotIndex !== -1) {
       return (
@@ -40,17 +43,20 @@ function App() {
     }
   };
 
-  const handleLabelChange = (event, index) => {
+  const handleLabelChange = (
+    event: ChangeEvent<HTMLSelectElement>,
+    index: number
+  ): void => {
     const updatedLabels = [...labels];
     updatedLabels[index] = event.target.value;
     setLabels(updatedLabels);
   };
 
-  const handleAsinChange = (event) => {
+  const handleAsinChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setAsin(event.target.value);
   };
 
-  const handleDownload = () => {
+  const handleDownload = (): void => {
     if (fileContents.length > 0) {
       fileContents.forEach((content, index) => {
         const label = labels[index];
@@ -79,7 +85,7 @@ function App() {
   };
 
   // Function to convert data URL to Blob
-  function dataURLtoBlob(dataURL) {
+  const dataURLtoBlob = (dataURL: string): Blob => {
     const parts = dataURL.split(";base64,");
     const contentType = parts[0].split(":")[1];
     const raw = window.atob(parts[1]);
@@ -89,7 +95,7 @@ function App() {
       uInt8Array[i] = raw.charCodeAt(i);
     }
     return new Blob([uInt8Array], { type: contentType });
-  }
+  };
 
   return (
     <div className="App">
